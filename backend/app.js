@@ -1,64 +1,67 @@
+
 const express = require('express');
 const cors = require('cors');
 const connection = require('./db');
-const db = db.js
 
 const server = express();
-
-
 
 server.use(cors());
 server.use(express.json());
 
-server.post('/login', async (req, res) =>
-{
-    const {username, password} = req.body;
+// Rota para testar a API
+server.get('/', (req, res) => {
+    res.json({ message: 'API da Academia funcionando!' });
+});
 
-    try{
-        const sql = 'SELECT * FROM alunos WHERE nome_completo = ? AND senha = ?'
-    
-        connection.query(
-            sql,[username, password], (erro, resultado) => {
-                if(erro)
-                {
-                    return res.status(500).json({erro : erro.message})
-                }
+// Login
+server.post('/login', (req, res) => {
+    const { username, password } = req.body;
 
-                if(resultado.length > 0)
-                {
-                    const aluno = resultado[0];
+    if (!username || !password) {
+        return res.status(400).json({
+            success: false,
+            message: 'Informe usuário e senha.'
+        });
+    }
 
-                    return res.status(200).json({
-                        success: true, 
-                        message: "Login realisado com sucesso!",
-                        aluno: {
-                            id: aluno.id,
-                            nome: aluno.nome_completo
-                        }
-                    });
-                }
-                else
-                {
-                    return res.status(401).json({
-                        success: false,
-                        message: "Nome de usuário ou senha incorretos"
-                    });
-                }
+    const sql = `
+        SELECT id, nome_completo
+        FROM alunos
+        WHERE nome_completo = ? AND senha = ?
+    `;
 
+    connection.query(sql, [username, password], (erro, resultado) => {
+        if (erro) {
+            console.error('Erro no login:', erro);
+
+            return res.status(500).json({
+                success: false,
+                message: 'Erro ao realizar login.'
+            });
+        }
+
+        if (resultado.length === 0) {
+            return res.status(401).json({
+                success: false,
+                message: 'Usuário ou senha incorretos.'
+            });
+        }
+
+        const aluno = resultado[0];
+
+        return res.status(200).json({
+            success: true,
+            message: 'Login realizado com sucesso!',
+            aluno: {
+                id: aluno.id,
+                nome: aluno.nome_completo
             }
-        )
-    }
-    catch (erro)
-    {
-        return res.status(500).json({erro: error.message});
-    }
+        });
+    });
 });
 
 const PORT = 3030;
 
-
-
-
 server.listen(PORT, () => {
-    console.log(`Servidor rodando na porta: ${PORT}`)
+    console.log(`Servidor rodando na porta ${PORT}`);
 });

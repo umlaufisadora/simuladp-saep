@@ -1,15 +1,70 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Academia - Login</title>
 </head>
 <body>
+
+    <h1>Login</h1>
+
     <form id="loginForm">
-    <input type="text" id="username" placeholder="Usuário" required>
-    <input type="password" id="password" placeholder="Senha" required>
-    <button type="submit">Entrar</button>
+        <input
+            type="text"
+            id="username"
+            placeholder="Usuário"
+            required
+        >
+
+        <input
+            type="password"
+            id="password"
+            placeholder="Senha"
+            required
+        >
+
+        <button type="submit">Entrar</button>
     </form>
+
+    <p id="mensagem"></p>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const mensagem = document.getElementById('mensagem');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const resposta = await fetch('http://localhost:3030/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const dados = await resposta.json();
+
+                mensagem.textContent = dados.message;
+
+                if (resposta.ok) {
+                    sessionStorage.setItem('usuario', JSON.stringify(dados.aluno));
+
+                    window.location.href = 'principal.html';
+                }
+
+            } catch (erro) {
+                mensagem.textContent = 'Não foi possível conectar ao servidor.';
+                console.error(erro);
+            }
+        });
+    </script>
+
 </body>
 </html>
